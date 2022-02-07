@@ -1,0 +1,14 @@
+tls/*
+!tls/.keep
+ca/intermediate/newcerts/*
+!ca/intermediate/newcerts/.keep
+ca/intermediate/index.txt
+ca/intermediate/index.txt.attr
+ca/intermediate/index.txt.old
+ca/intermediate/serial
+ca/intermediate/serial.old
+ca/intermediate/crlnumber
+ca/intermediate/crlnumber.old
+ca/intermediate/openssl.cnf
+ca/intermediate/crl.pem
+ca/intermediate/index.txt.attr.old
