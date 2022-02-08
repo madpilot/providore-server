@@ -45,14 +45,19 @@ export function signPayload(
 ): void {
   const created = new Date();
   const expires = new Date(created.getTime() + 15 * 60 * 1000);
+  created.setMilliseconds(0);
+  expires.setMilliseconds(0);
+
+  const createdISOString = created.toISOString().split(".")[0];
+  const expiredISOString = created.toISOString().split(".")[0];
 
   const message = `${payload.toString(
     "utf-8"
-  )}\n${created.toISOString()}\n${expires.toISOString()}`;
+  )}\n${createdISOString}\n${expiredISOString}`;
   const signature = sign(message, secret);
 
-  res.set("created-at", created.toISOString());
-  res.set("expiry", expires.toISOString());
+  res.set("created-at", createdISOString);
+  res.set("expiry", expiredISOString);
   res.set("signature", signature);
 }
 
