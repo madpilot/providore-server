@@ -1,0 +1,27 @@
+name: Server
+
+on:
+  push:
+    branches:
+      - "**"
+
+env:
+  CI: "true"
+  DEBUG: "true"
+
+jobs:
+  test:
+    defaults:
+      run:
+        shell: bash
+        
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: openssl version
+      - run: npm install
+      - run: npm run lint
+      - run: npm test
