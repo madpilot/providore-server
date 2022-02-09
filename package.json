@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/madpilot/providore.git"
+    "url": "git+https://github.com/madpilot/providore-server.git"
   },
   "author": "Myles Eftos <myles@madpilot.com.au>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/madpilot/providore/issues"
+    "url": "https://github.com/madpilot/providore-server/issues"
   },
-  "homepage": "https://github.com/madpilot/providore#readme",
+  "homepage": "https://github.com/madpilot/providore-server#readme",
   "devDependencies": {
     "@tsconfig/node14": "1.0.1",
     "@types/commander": "2.12.2",
