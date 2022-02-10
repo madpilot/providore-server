@@ -1,9 +1,9 @@
 {
   "name": "providore",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Simple IoT provisioning service",
-  "main": "dist/src/index.js",
-  "bin": "dist/src/index.js",
+  "main": "dist/index.js",
+  "bin": "dist/index.js",
   "scripts": {
     "lint": "eslint **/*.ts",
     "build": "tsc",
