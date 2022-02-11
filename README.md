@@ -14,6 +14,10 @@ Providore runs from the command line, so you will need to install it globally.
 
 `npm -g install providore`
 
+### Docker
+
+`docker start madpilot/providore:latest -v /path/to/config:/config -v /path/to/devices:/devices -v /path/to/tls:/tls -v /path/to/ca:/ca -p 3000:3000`
+
 ## Running
 
 
