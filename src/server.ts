@@ -32,7 +32,7 @@ export async function startServer({
   firmwareStore,
   openSSL
 }: Config) {
-  const { protocol, bind, port, sslCertPath, sslKeyPath, caCertPath } =
+  const { protocol, bind, port, sslCertPath, sslKeyPath, caCertPath, user } =
     webserver;
 
   try {
@@ -85,11 +85,19 @@ export async function startServer({
       );
       httpsServer.listen(port, bind, () => {
         logger.info(`HTTPS server listening at ${protocol}://${bind}:${port}`);
+        if (typeof user === "string") {
+          logger.debug(`Setting user to ${user}`);
+          process.setuid(user);
+        }
       });
     } else {
       const httpServer = http.createServer(app);
       httpServer.listen(port, bind, () => {
         logger.info(`HTTP server listening at ${protocol}://${bind}:${port}`);
+        if (typeof user === "string") {
+          logger.debug(`Setting user to ${user}`);
+          process.setuid(user);
+        }
       });
     }
   } catch (e) {
