@@ -40,7 +40,11 @@ export interface Config extends StoreConfig {
   openSSL: OpenSSLConfig;
 }
 
-const CONFIG_PATHS = ["/etc/providore", `${process.env.HOME}/.providore`];
+const CONFIG_PATHS = [
+  "/etc/providore",
+  `${process.env.HOME}/.providore`,
+  `${process.env.HOME}/.config/providor`
+];
 
 export async function resolveConfigPaths(
   filename: string,
