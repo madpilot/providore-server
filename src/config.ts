@@ -12,6 +12,7 @@ export interface HTTPConfig {
   sslCertPath?: string | undefined;
   sslKeyPath?: string | undefined;
   caCertPath?: string | undefined;
+  user?: string;
 }
 
 export interface StoreConfig {
