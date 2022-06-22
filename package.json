@@ -1,6 +1,6 @@
 {
   "name": "providore",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Simple IoT provisioning service",
   "main": "dist/index.js",
   "bin": "dist/index.js",

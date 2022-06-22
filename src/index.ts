@@ -5,7 +5,7 @@ import { startServer } from "./server";
 import { resolve } from "path";
 import { logger, reconfigureLogger } from "./logger";
 const program = new Command();
-program.version("0.0.1");
+program.version("0.0.5");
 
 program.option("-b, --bind <bind>", "IP Address to bind to");
 program.option("-p, --port <port>", "TCP port to listen to");
