@@ -72,6 +72,14 @@ async function bootstrap(options: commander.OptionValues) {
     config.firmwareStore = options.firmwareStore;
   }
 
+  if (typeof options.port !== "undefined") {
+    config.webserver.port = options.port;
+  }
+
+  if (typeof options.bind !== "undefined") {
+    config.webserver.bind = options.bind;
+  }
+
   if (config.webserver.sslCertPath) {
     config.webserver.sslCertPath = resolve(
       config.config,

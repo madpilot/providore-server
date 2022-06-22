@@ -83,12 +83,12 @@ export async function startServer({
         },
         app
       );
-      httpsServer.listen(port, () => {
+      httpsServer.listen(port, bind, () => {
         logger.info(`HTTPS server listening at ${protocol}://${bind}:${port}`);
       });
     } else {
       const httpServer = http.createServer(app);
-      httpServer.listen(port, () => {
+      httpServer.listen(port, bind, () => {
         logger.info(`HTTP server listening at ${protocol}://${bind}:${port}`);
       });
     }
