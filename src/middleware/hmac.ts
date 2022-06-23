@@ -139,15 +139,17 @@ export function hmacAuthorization(devices: Devices) {
       return next("router");
     }
 
+    const method = req.method.toUpperCase();
+
     const message = [
-      req.method,
+      method,
       req.path,
       version,
       requestCreatedAt,
       req.get("expiry")
     ];
 
-    if (req.method === "post") {
+    if (method === "POST" || method === "PUT") {
       message.push(req.body);
     }
 
