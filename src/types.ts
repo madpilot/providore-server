@@ -6,8 +6,14 @@ export interface Firmware {
   next?: string;
 }
 
+export interface Certificate {
+  extensions?: "server_cert" | "user_cert";
+  days?: number;
+}
+
 export interface Device {
   secretKey: string;
+  certificate?: Certificate;
   firmware: Array<Firmware>;
 }
 

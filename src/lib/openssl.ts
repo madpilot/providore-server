@@ -5,6 +5,7 @@ import { logger } from "../logger";
 import { OpenSSLConfig } from "config";
 import { readFile } from "fs/promises";
 import { dirname } from "path";
+import { Certificate } from "types";
 
 type CertificateStatus = "valid" | "revoked" | "expired";
 interface CertificateRecord {
@@ -158,7 +159,11 @@ function parseDatabaseFile(
 }
 
 function parseCnFromSubject(subject: string): string | undefined {
-  const str = subject.split("/").find((part) => part.indexOf("CN=") === 0);
+  const str = subject
+    .trim()
+    .split("/")
+    .find((part) => part.indexOf("CN=") === 0);
+
   if (str) {
     const [_, cn] = str.split("=");
     return cn;
@@ -260,6 +265,7 @@ export async function sign(
   csr: string,
   device: string,
   certificateStore: string,
+  certificateSettings: Certificate | undefined,
   { bin, passwordFile, configFile }: OpenSSLConfig
 ): Promise<string> {
   if (!configFile) {
@@ -276,7 +282,7 @@ export async function sign(
     throw new Error("CN not found in the CSR");
   }
   if (cn !== device) {
-    throw new Error("CN does not match the device name");
+    throw new Error(`CN ${cn} does not match the device name ${device}`);
   }
   logger.debug(`Checking certificate database for CN=${cn}`);
 
@@ -294,6 +300,9 @@ export async function sign(
       )
   );
 
+  const certificateType = certificateSettings?.extensions || "usr_cert";
+  const days = certificateSettings?.days;
+
   const stdio = await openssl(
     [
       "ca",
@@ -303,14 +312,15 @@ export async function sign(
       "-passin",
       `file:${passwordFile}`,
       "-extensions",
-      "usr_cert",
+      certificateType,
       "-notext",
       "-md",
       "sha256",
       "-in",
       Buffer.from(csr),
       "-out",
-      `${certificateStore}/${device}.cert.pem`
+      `${certificateStore}/${device}.cert.pem`,
+      ...(days ? ["-days", days.toString()] : [])
     ],
     bin
   );

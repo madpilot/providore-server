@@ -38,6 +38,7 @@ export function csrHandler(
         csr,
         req.device,
         certificateStore,
+        device.certificate,
         openSSL
       );
 
