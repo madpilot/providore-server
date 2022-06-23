@@ -139,11 +139,19 @@ export function hmacAuthorization(devices: Devices) {
       return next("router");
     }
 
-    const message = `${req.method}\n${
-      req.path
-    }\n${version}\n${requestCreatedAt}\n${req.get("expiry")}`;
+    const message = [
+      req.method,
+      req.path,
+      version,
+      requestCreatedAt,
+      req.get("expiry")
+    ];
 
-    const signature = sign(message, device.secretKey);
+    if (req.method === "post") {
+      message.push(req.body);
+    }
+
+    const signature = sign(message.join("\n"), device.secretKey);
 
     if (signature !== authorization.signature) {
       logger.error("Invalid signature");
