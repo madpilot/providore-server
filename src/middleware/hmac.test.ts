@@ -369,7 +369,7 @@ describe("hmac middleware", () => {
         const created = new Date();
         const expiry = new Date(created.getTime() + 15 * 60 * 1000);
 
-        const message = `get\npath\n${created.toISOString()}\n${expiry.toISOString()}`;
+        const message = `GET\npath\n${created.toISOString()}\n${expiry.toISOString()}`;
         const signature = sign(message, "notsecret");
 
         req = {
@@ -415,12 +415,57 @@ describe("hmac middleware", () => {
         const created = new Date();
         const expiry = new Date(created.getTime() + 15 * 60 * 1000);
 
-        const message = `get\npath\n${version}\n${created.toISOString()}\n${expiry.toISOString()}`;
+        const message = `GET\npath\n${version}\n${created.toISOString()}\n${expiry.toISOString()}`;
         const signature = sign(message, "secret");
 
         req = {
           method: "get",
           path: "path",
+          get: jest.fn((header) => {
+            switch (header) {
+              case "authorization":
+                return `Hmac key-id="abc123", signature="${signature}"`;
+              case "created-at":
+                return created.toISOString();
+              case "expiry":
+                return expiry.toISOString();
+              case "x-firmware-version":
+                return version;
+              default:
+                return undefined;
+            }
+          })
+        } as unknown as HMACRequest;
+      });
+
+      it("sets the device", () => {
+        const middleware = subject();
+        middleware(req, res, nextFunction);
+        expect(req.device).toEqual("abc123");
+      });
+
+      it("passes to the next middleware in the chain", () => {
+        const middleware = subject();
+        middleware(req, res, nextFunction);
+
+        expect(nextFunction as jest.Mock).toBeCalledTimes(1);
+        expect(nextFunction as jest.Mock).toHaveBeenCalledWith();
+      });
+    });
+
+    describe("Post data", () => {
+      beforeEach(() => {
+        const version = "1.0.0";
+        const created = new Date();
+        const expiry = new Date(created.getTime() + 15 * 60 * 1000);
+
+        const message = `POST\npath\n${version}\n${created.toISOString()}\n${expiry.toISOString()}\nBody content`;
+        const signature = sign(message, "secret");
+
+        req = {
+          method: "POST",
+          path: "path",
+          body: "Body content",
           get: jest.fn((header) => {
             switch (header) {
               case "authorization":
@@ -462,17 +507,17 @@ describe("sign", () => {
   const subject = () => sign(message, secret);
 
   it("signs strings", () => {
-    message = "get\npath\n2021-04-08T11:00:21\n2021-04-08T11:15:21";
+    message = "GET\npath\n2021-04-08T11:00:21\n2021-04-08T11:15:21";
     secret = "secret";
-    expect(subject()).toEqual("SpzyqqImicOLKO9ZwhB+kk4/gM32+wd+I6h6Si6BW/s=");
+    expect(subject()).toEqual("koYEv11PrRgWdVwlznGvw/O0aqw4VMCNffhh9xOJ2oY=");
   });
 
   it("signs Buffers", () => {
     message = Buffer.from(
-      "get\npath\n2021-04-08T11:00:21\n2021-04-08T11:15:21",
+      "GET\npath\n2021-04-08T11:00:21\n2021-04-08T11:15:21",
       "utf8"
     );
     secret = "secret";
-    expect(subject()).toEqual("SpzyqqImicOLKO9ZwhB+kk4/gM32+wd+I6h6Si6BW/s=");
+    expect(subject()).toEqual("koYEv11PrRgWdVwlznGvw/O0aqw4VMCNffhh9xOJ2oY=");
   });
 });
