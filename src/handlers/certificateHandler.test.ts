@@ -21,15 +21,7 @@ describe("certificateHandler", () => {
   const subject = () =>
     certificateHandler(storePath, {
       abc123: {
-        secretKey: "secret",
-        firmware: [
-          {
-            type: "type",
-            version: "version",
-            config: "config",
-            file: "firmware.bin"
-          }
-        ]
+        secretKey: "secret"
       }
     });
 

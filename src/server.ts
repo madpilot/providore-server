@@ -5,12 +5,8 @@ import { readFile } from "fs/promises";
 
 import http from "http";
 import https from "https";
-import { configHandler } from "./handlers/configHandler";
 import { certificateHandler } from "./handlers/certificateHandler";
-import {
-  checkUpdateHandler,
-  firmwareHandler
-} from "./handlers/firmwareHandler";
+
 import { csrHandler } from "./handlers/csrHandler";
 import { crlHandler } from "./handlers/crlHandler";
 import { Config } from "config";
@@ -29,7 +25,6 @@ export async function startServer({
   webserver,
   configStore,
   certificateStore,
-  firmwareStore,
   openSSL
 }: Config) {
   const { protocol, bind, port, sslCertPath, sslKeyPath, caCertPath, user } =
@@ -46,18 +41,12 @@ export async function startServer({
 
     app.use(hmacAuthorization(devices));
 
-    app.get("/config", configHandler(configStore, devices));
-
     if (certificateStore) {
       app.post(
         "/certificates/request",
         csrHandler(certificateStore, devices, openSSL)
       );
       app.get("/certificate", certificateHandler(certificateStore, devices));
-    }
-    if (firmwareStore) {
-      app.get("/firmware", firmwareHandler(firmwareStore, devices));
-      app.get("/firmware/check", checkUpdateHandler(devices));
     }
 
     if (protocol === "https") {
