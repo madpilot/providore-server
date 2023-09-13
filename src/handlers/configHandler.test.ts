@@ -1,4 +1,4 @@
-import { certificateHandler } from "./certificateHandler";
+import { configHandler } from "./configHandler";
 import path, { join } from "path";
 import { Response } from "express";
 import { HMACRequest, sign } from "../middleware/hmac";
@@ -16,17 +16,24 @@ class MockError extends Error {
   }
 }
 
-describe("certificateHandler", () => {
+describe("configHandler", () => {
   const storePath = join(__dirname, "..", "test", "store");
   const subject = () =>
-    certificateHandler(storePath, {
+    configHandler(storePath, {
       abc123: {
         secretKey: "secret",
         firmware: [
           {
             type: "type",
-            version: "version",
-            config: "config",
+            version: "1.0.0",
+            config: "1.0.0.json",
+            file: "firmware.bin",
+            next: "2.0.0"
+          },
+          {
+            type: "type",
+            version: "2.0.0",
+            config: "2.0.0.json",
             file: "firmware.bin"
           }
         ]
@@ -36,16 +43,32 @@ describe("certificateHandler", () => {
   let req: HMACRequest;
   let res: Response;
   let device: string;
+  let version: string;
 
   beforeEach(() => {
     device = "abc123";
-    req = { device } as HMACRequest;
+    version = "1.0.0";
+    req = {
+      device,
+      get: (str) => ({ "x-firmware-version": version }[str])
+    } as HMACRequest;
     res = {
       contentType: jest.fn(),
       sendFile: jest.fn(),
       sendStatus: jest.fn(),
       set: jest.fn()
     } as unknown as Response;
+  });
+
+  describe("no params", () => {
+    it("returns a 400", async () => {
+      req = { device, get: () => undefined } as unknown as HMACRequest;
+      const handler = subject();
+      await handler(req, res);
+
+      expect(res.sendStatus as jest.Mock).toBeCalledTimes(1);
+      expect(res.sendStatus as jest.Mock).toBeCalledWith(400);
+    });
   });
 
   describe("when the file is found", () => {
@@ -55,7 +78,7 @@ describe("certificateHandler", () => {
 
       expect(res.sendFile as jest.Mock).toBeCalledTimes(1);
       expect(res.sendFile as jest.Mock).toBeCalledWith(
-        path.join(storePath, "abc123.cert.pem")
+        path.join(storePath, "abc123/1.0.0.json")
       );
     });
 
@@ -68,7 +91,7 @@ describe("certificateHandler", () => {
       const created = (res.set as jest.Mock).mock.calls[0][1] as string;
       const expires = (res.set as jest.Mock).mock.calls[1][1] as string;
 
-      const data = await readFile(path.join(storePath, "abc123.cert.pem"));
+      const data = await readFile(path.join(storePath, "abc123/1.0.0.json"));
       const message = `${data.toString("utf-8")}\n${created}\n${expires}`;
       const signature = sign(message, "secret");
 
