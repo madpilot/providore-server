@@ -16,9 +16,7 @@ export interface HTTPConfig {
 }
 
 export interface StoreConfig {
-  configStore: string;
   deviceStore: string | undefined;
-  firmwareStore?: string | undefined;
   certificateStore?: string | undefined;
 }
 
@@ -44,7 +42,7 @@ export interface Config extends StoreConfig {
 const CONFIG_PATHS = [
   "/etc/providore",
   `${process.env.HOME}/.providore`,
-  `${process.env.HOME}/.config/providor`
+  `${process.env.HOME}/.config/providore`
 ];
 
 export async function resolveConfigPaths(
