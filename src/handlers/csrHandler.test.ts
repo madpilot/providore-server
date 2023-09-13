@@ -73,7 +73,15 @@ describe("csrHandler", () => {
       certificatePath,
       {
         abc123: {
-          secretKey: "secret"
+          secretKey: "secret",
+          firmware: [
+            {
+              type: "type",
+              version: "version",
+              config: "config",
+              file: "firmware.bin"
+            }
+          ]
         }
       },
       {

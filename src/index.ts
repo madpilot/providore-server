@@ -5,7 +5,7 @@ import { startServer } from "./server";
 import { resolve } from "path";
 import { logger, reconfigureLogger } from "./logger";
 const program = new Command();
-program.version("0.0.6");
+program.version("0.0.5");
 
 program.option("-b, --bind <bind>", "IP Address to bind to");
 program.option("-p, --port <port>", "TCP port to listen to");
@@ -19,7 +19,11 @@ program.option(
   "Path to the TLS key. Required if SSL is enabled"
 );
 program.option("--cert-ca <path>", "Path to a TLS ca cert chain.");
+
 program.option("-c, --config <path>", "Path to config file");
+
+program.option("--config-store <path>", "Folder that stores device configs");
+program.option("--firmware-store <path>", "Folder that stores device firmware");
 program.option(
   "--certificate-store <path>",
   "Folder that stores device certificates"
@@ -56,8 +60,16 @@ async function bootstrap(options: commander.OptionValues) {
     config.webserver.caCertPath = options.certCa;
   }
 
+  if (typeof options.configStore !== "undefined") {
+    config.configStore = options.configStore;
+  }
+
   if (typeof options.certificateStore !== "undefined") {
     config.certificateStore = options.certificateStore;
+  }
+
+  if (typeof options.firmwareStore !== "undefined") {
+    config.firmwareStore = options.firmwareStore;
   }
 
   if (typeof options.port !== "undefined") {
@@ -88,6 +100,9 @@ async function bootstrap(options: commander.OptionValues) {
   }
   if (config.certificateStore) {
     config.certificateStore = resolve(config.config, config.certificateStore);
+  }
+  if (config.firmwareStore) {
+    config.firmwareStore = resolve(config.config, config.firmwareStore);
   }
 
   if (config.openSSL.bin) {
