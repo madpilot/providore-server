@@ -22,8 +22,10 @@ program.option("--cert-ca <path>", "Path to a TLS ca cert chain.");
 
 program.option("-c, --config <path>", "Path to config file");
 
-program.option("--config-store <path>", "Folder that stores device configs");
-program.option("--firmware-store <path>", "Folder that stores device firmware");
+program.option(
+  "--config-store <path>",
+  "Folder that stores device definitions"
+);
 program.option(
   "--certificate-store <path>",
   "Folder that stores device certificates"
@@ -66,10 +68,6 @@ async function bootstrap(options: commander.OptionValues) {
 
   if (typeof options.certificateStore !== "undefined") {
     config.certificateStore = options.certificateStore;
-  }
-
-  if (typeof options.firmwareStore !== "undefined") {
-    config.firmwareStore = options.firmwareStore;
   }
 
   if (typeof options.port !== "undefined") {

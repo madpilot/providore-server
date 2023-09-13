@@ -11,7 +11,7 @@ type CertificateStatus = "valid" | "revoked" | "expired";
 interface CertificateRecord {
   status: CertificateStatus;
   expiration: Date;
-  revokation: Date;
+  revocation: Date;
   serial: string;
   subject: string;
 }
@@ -148,7 +148,7 @@ function parseDatabaseFile(
     const certificate: CertificateRecord = {
       status: certificateStatus(status),
       expiration: new Date(Date.parse(expiration)),
-      revokation: new Date(Date.parse(revokation)),
+      revocation: new Date(Date.parse(revokation)),
       serial,
       subject
     };
