@@ -26,7 +26,7 @@
     "@types/express": "4.17.17",
     "@types/jest": "29.5.4",
     "@types/rimraf": "3.0.2",
-    "@types/tmp": "0.2.4",
+    "@types/tmp": "0.2.6",
     "@types/winston-syslog": "2.4.0",
     "@typescript-eslint/eslint-plugin": "5.62.0",
     "@typescript-eslint/parser": "5.62.0",
