@@ -243,8 +243,11 @@ export async function getCSRExtensions(
     bin
   );
 
+  // The indentation of this section differs between OpenSSL versions, so work
+  // relative to the "Requested Extensions:" line: extension names are one level
+  // below it, and their values are below that.
   const extensions: Record<string, string[]> = {};
-  let inExtensions = false;
+  let baseIndent: number | undefined;
   let current: string | undefined;
 
   for (const line of result.split("\n")) {
@@ -254,12 +257,14 @@ export async function getCSRExtensions(
     const indent = line.length - line.trimStart().length;
     const text = line.trim();
 
-    if (!inExtensions) {
-      inExtensions = text === "Requested Extensions:";
-    } else if (indent <= 8) {
-      // Back to the top level (e.g. Signature Algorithm)
+    if (baseIndent === undefined) {
+      if (text === "Requested Extensions:") {
+        baseIndent = indent;
+      }
+    } else if (indent <= baseIndent) {
+      // Back out of the extensions (e.g. Signature Algorithm)
       break;
-    } else if (indent === 12 && text.endsWith(":")) {
+    } else if (indent === baseIndent + 4 && text.endsWith(":")) {
       current = text.slice(0, -1);
       extensions[current] = [];
     } else if (current) {
