@@ -2,10 +2,14 @@
 import commander, { Command } from "commander";
 import { load } from "./config";
 import { startServer } from "./server";
+import { readFileSync } from "fs";
 import { resolve } from "path";
 import { logger, reconfigureLogger } from "./logger";
 const program = new Command();
-program.version("0.0.5");
+const { version } = JSON.parse(
+  readFileSync(resolve(__dirname, "..", "package.json"), "utf8")
+);
+program.version(version);
 
 program.option("-b, --bind <bind>", "IP Address to bind to");
 program.option("-p, --port <port>", "TCP port to listen to");
