@@ -1,7 +1,7 @@
 import { OpenSSLConfig } from "config";
 import { Response } from "express";
 import { logger } from "../logger";
-import { sign } from "../lib/openssl";
+import { InvalidCSRError, sign } from "../lib/openssl";
 import { HMACRequest, signPayload } from "../middleware/hmac";
 import { Devices } from "../types";
 
@@ -46,6 +46,11 @@ export function csrHandler(
       signPayload(res, certificate, device.secretKey);
       res.send(certificate);
     } catch (e: any) {
+      if (e instanceof InvalidCSRError) {
+        logger.warn(`CSR Handler: ${e.message}`);
+        res.sendStatus(400);
+        return;
+      }
       console.log(e);
       logger.error(e.message);
       res.sendStatus(500);

@@ -4,6 +4,8 @@ import { csrHandler } from "./csrHandler";
 import { readFile, writeFile } from "fs/promises";
 import _rimraf from "rimraf";
 import { join } from "path";
+import { execFile } from "child_process";
+import { tmpdir } from "os";
 
 async function rimraf(path: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
@@ -190,6 +192,83 @@ describe("csrHandler", () => {
       expect(cn).toEqual(
         "/C=AU/ST=Victoria/O=Providore/OU=Test/CN=abc123/emailAddress=test@example.com"
       );
+    });
+  });
+
+  describe("Subject Alternative Names", () => {
+    async function csrWithExtensions(extensions: string): Promise<string> {
+      const config = join(tmpdir(), `csr-${Date.now()}-${Math.random()}.cnf`);
+      await writeFile(
+        config,
+        `[req]\ndistinguished_name=dn\nreq_extensions=ext\n[dn]\n[ext]\n${extensions}\n`
+      );
+      return new Promise((resolve, reject) => {
+        execFile(
+          "openssl",
+          [
+            "req",
+            "-new",
+            "-key",
+            join(openSSLPath, "private", "abc123.key.pem"),
+            "-subj",
+            "/CN=abc123",
+            "-config",
+            config
+          ],
+          (err, stdout) => (err ? reject(err) : resolve(stdout))
+        );
+      });
+    }
+
+    async function certificateText(): Promise<string> {
+      return new Promise((resolve, reject) => {
+        execFile(
+          "openssl",
+          [
+            "x509",
+            "-noout",
+            "-text",
+            "-in",
+            join(certificatePath, "abc123.cert.pem")
+          ],
+          (err, stdout) => (err ? reject(err) : resolve(stdout))
+        );
+      });
+    }
+
+    it("copies a SAN matching the device name into the certificate", async () => {
+      req = {
+        device,
+        body: await csrWithExtensions("subjectAltName=DNS:abc123")
+      } as HMACRequest;
+      await subject()(req, res);
+
+      expect(res.sendStatus as jest.Mock).not.toBeCalled();
+      expect(await certificateText()).toMatch(
+        /Subject Alternative Name:\s+DNS:abc123/
+      );
+    });
+
+    it("rejects a SAN that is not the device name", async () => {
+      req = {
+        device,
+        body: await csrWithExtensions("subjectAltName=DNS:abc123,DNS:evil")
+      } as HMACRequest;
+      await subject()(req, res);
+
+      expect(res.sendStatus as jest.Mock).toBeCalledWith(400);
+      expect(res.send as jest.Mock).not.toBeCalled();
+    });
+
+    it("rejects other requested extensions", async () => {
+      req = {
+        device,
+        body: await csrWithExtensions("basicConstraints=CA:TRUE")
+      } as HMACRequest;
+      await subject()(req, res);
+
+      expect(res.sendStatus as jest.Mock).toBeCalledWith(400);
+      expect(res.send as jest.Mock).not.toBeCalled();
     });
   });
 });
