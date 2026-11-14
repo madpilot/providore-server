@@ -230,6 +230,74 @@ export async function getCSRSubject(
   }
 }
 
+export class InvalidCSRError extends Error {}
+
+const SUBJECT_ALT_NAME = "X509v3 Subject Alternative Name";
+
+export async function getCSRExtensions(
+  csr: string,
+  { bin }: OpenSSLConfig
+): Promise<Record<string, string>> {
+  const result = await openssl(
+    ["req", "-noout", "-text", "-in", Buffer.from(csr)],
+    bin
+  );
+
+  // The indentation of this section differs between OpenSSL versions, so work
+  // relative to the "Requested Extensions:" line: extension names are one level
+  // below it, and their values are below that.
+  const extensions: Record<string, string[]> = {};
+  let baseIndent: number | undefined;
+  let current: string | undefined;
+
+  for (const line of result.split("\n")) {
+    if (line.trim() === "") {
+      continue;
+    }
+    const indent = line.length - line.trimStart().length;
+    const text = line.trim();
+
+    if (baseIndent === undefined) {
+      if (text === "Requested Extensions:") {
+        baseIndent = indent;
+      }
+    } else if (indent <= baseIndent) {
+      // Back out of the extensions (e.g. Signature Algorithm)
+      break;
+    } else if (indent === baseIndent + 4 && text.endsWith(":")) {
+      current = text.slice(0, -1);
+      extensions[current] = [];
+    } else if (current) {
+      extensions[current].push(text);
+    }
+  }
+
+  return Object.fromEntries(
+    Object.entries(extensions).map(([name, values]) => [name, values.join(" ")])
+  );
+}
+
+// A CSR may only request a Subject Alternative Name, and the only name it can
+// request is the device name. Anything else is rejected, as the CA is configured
+// to copy extensions from the CSR.
+export function validateCSRExtensions(
+  extensions: Record<string, string>,
+  device: string
+): void {
+  for (const [name, value] of Object.entries(extensions)) {
+    if (name !== SUBJECT_ALT_NAME) {
+      throw new InvalidCSRError(`CSR requests unsupported extension: ${name}`);
+    }
+
+    const names = value.split(",").map((v) => v.trim());
+    if (names.some((v) => v !== `DNS:${device}`)) {
+      throw new InvalidCSRError(
+        `CSR Subject Alternative Name must only be DNS:${device}`
+      );
+    }
+  }
+}
+
 export async function updateDB({
   bin,
   passwordFile,
@@ -284,6 +352,9 @@ export async function sign(
   if (cn !== device) {
     throw new Error(`CN ${cn} does not match the device name ${device}`);
   }
+
+  validateCSRExtensions(await getCSRExtensions(csr, { bin }), device);
+
   logger.debug(`Checking certificate database for CN=${cn}`);
 
   const certificates = await getCertificatesFromDatabase(cn, {
